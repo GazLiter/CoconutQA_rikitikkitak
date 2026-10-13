@@ -1,6 +1,7 @@
+#Фикстуры
 import pytest
 import requests
-from requests import session
+
 
 from clients.api_meneger import ApiManager
 from utils.data_generator import DataGenerator
