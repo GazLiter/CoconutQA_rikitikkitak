@@ -29,23 +29,28 @@ class DataGenerator:
     }
 
     @staticmethod
-    def name_cinema():
+    def name_movie():
         return fake.catch_phrase()
 
     @staticmethod
-    def cinema_payload(genre_id):
+    def movie_payload(genre_id):
         location = ['SPB', 'MSK']
         return {
             "name": fake.catch_phrase(),
             "imageUrl": fake.image_url(),
-            "price": fake.random_int(min=1,max=9999),
+            "price": fake.random_int(min=1,max=1000),
             "description": fake.paragraph(nb_sentences=4),
             "location": fake.random_element(location),
             "published": fake.boolean(),
             "genreId": genre_id
 }
 
+    @staticmethod
+    def random_pagesize():
+        return fake.random_int(min=2, max=20)
 
-
+    @staticmethod
+    def random_page():
+        return fake.random_int(min=1, max=2)
 
 

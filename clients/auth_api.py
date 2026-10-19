@@ -1,4 +1,4 @@
-from idlelib.rpc import response_queue
+
 
 from config.base_urls import AUTH_URL
 from diy_requester.diy_requester import DiyRequester

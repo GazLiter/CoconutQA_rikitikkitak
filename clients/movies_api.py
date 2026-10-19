@@ -6,7 +6,7 @@ class MoviesApi(DiyRequester):
     def __init__(self,session):
         super().__init__(session= session, central_url=MOVIES_URL)
 
-    def get_movies(self,expected_status=200,params=None,**kwargs):
+    def get_movies(self,expected_status=200, params=None,**kwargs):
         return self.send_request(
             method='GET',
             expected_status=expected_status,
@@ -15,31 +15,31 @@ class MoviesApi(DiyRequester):
 
         )
 
-    def post_movies(self,data,expected_status=201):
+    def post_movie(self, data, expected_status=201):
         return self.send_request(
             method='POST',
             expected_status=expected_status,
             json=data
         )
 
-    def delete_movies(self, id=int, expected_status=200):
+    def delete_movie(self, id_movie:int, expected_status=200):
         return self.send_request(
             method='DELETE',
-            endpoint=f'/{id}',
+            endpoint=f'/{id_movie}',
             expected_status=expected_status
         )
 
-    def get_cinema_on_id(self, id_cinema=int,expected_status=200):
+    def get_movie_by_id(self, id_movie:int, expected_status=200):
         return self.send_request(
             method='GET',
-            endpoint=f'/{id_cinema}',
+            endpoint=f'/{id_movie}',
             expected_status=expected_status
         )
 
-    def patch_cinema_on_id(self,data,id_cinema=int,expected_status=200):
+    def patch_movie_by_id(self, id_movie:int, data, expected_status=200):
         return self.send_request(
             method='PATCH',
-            endpoint=f'/{id_cinema}',
+            endpoint=f'/{id_movie}',
             expected_status=expected_status,
             json=data
         )
