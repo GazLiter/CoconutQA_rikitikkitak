@@ -1,7 +1,5 @@
-
 import pytest
 import requests
-
 
 from clients.api_manager import ApiManager
 from config.admin_credentials import ADMIN_CREDENTIALS
@@ -16,9 +14,9 @@ from utils.data_generator import DataGenerator
 @pytest.fixture()
 def api_manager():
     session = requests.Session()
-    request = ApiManager(session)
+    manager = ApiManager(session)
 
-    yield request
+    yield manager
 
     session.close()
 
@@ -69,8 +67,8 @@ def genre_name():
 
 @pytest.fixture()
 def created_genre_id(admin_api_manager, genre_name, request):
-    response = admin_api_manager.genres_api.create_genre(genre_name)
-    genre_id = response.json().get('id')
+    body = admin_api_manager.genres_api.create_genre(genre_name).json()
+    genre_id = body.get('id')
 
     yield genre_id
 
@@ -91,21 +89,46 @@ def movie_payload(created_genre_id):
 
 
 @pytest.fixture()
-def created_movie(admin_api_manager, movie_payload, request):
-    movie = admin_api_manager.movies_api.post_movie(movie_payload).json()
+def created_movie(admin_api_manager, created_genre_id, request):
+    created_ids = []
 
-    yield movie
+    def create(**overrides):
+        payload = DataGenerator.movie_payload(created_genre_id)
+        payload.update(overrides)
+
+        body = admin_api_manager.movies_api.create_movie(payload).json()
+        created_ids.append(body['id'])
+        return body
+
+    yield create
 
     if not request.node.get_closest_marker("no_cleanup"):
-        admin_api_manager.movies_api.delete_movie(movie['id'])
+        for movie_id in created_ids:
+            admin_api_manager.movies_api.delete_movie(movie_id)
+
 
 
 @pytest.fixture()
 def created_movie_id(created_movie):
-    return created_movie['id']
+    return created_movie()['id']
 
+@pytest.fixture()
+def create_3_movies(admin_api_manager, created_genre_id, request):
+    movies = []
+    movie_ids = []
 
+    for _ in range(3):
+        payload = DataGenerator.movie_payload(created_genre_id)
 
+        body = admin_api_manager.movies_api.create_movie(payload).json()
+        movies.append(body)
+        movie_ids.append(body['id'])
+
+    yield movies
+
+    if not request.node.get_closest_marker("no_cleanup"):
+        for movie_id in movie_ids:
+            admin_api_manager.movies_api.delete_movie(movie_id)
 
 
 

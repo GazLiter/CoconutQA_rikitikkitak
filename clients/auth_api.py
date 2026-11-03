@@ -1,5 +1,3 @@
-
-
 from config.base_urls import AUTH_URL
 from diy_requester.diy_requester import DiyRequester
 
@@ -12,18 +10,14 @@ class AuthApi(DiyRequester):
         super().__init__(session=session, central_url=AUTH_URL)
 
     def login(self,data):
-        response = self.send_request(
+        return self.send_request(
             'POST',
             endpoint=self.LOGIN,
-            expected_status=201,
+            expected_status=200,
             json=data
         )
 
-        token = response.json().get('accessToken')
-        if token:
-            response.headers.update({'Authorization': f'Bearer {token}'})
 
-        return response
 
 
     def registration(self,data):

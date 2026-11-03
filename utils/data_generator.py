@@ -16,7 +16,7 @@ class DataGenerator:
 
     @staticmethod
     def name():
-        return fake.first_name()
+        return fake.pystr(min_chars=5, max_chars=10)
 
     @staticmethod
     def user_payload():
@@ -30,19 +30,20 @@ class DataGenerator:
 
     @staticmethod
     def name_movie():
-        return fake.catch_phrase()
+        return fake.lexify(text='??????? ?????')
 
     @staticmethod
     def movie_payload(genre_id):
         location = ['SPB', 'MSK']
+
         return {
             "name": fake.catch_phrase(),
             "imageUrl": fake.image_url(),
             "price": fake.random_int(min=1,max=1000),
             "description": fake.paragraph(nb_sentences=4),
             "location": fake.random_element(location),
-            "published": fake.boolean(),
-            "genreId": genre_id
+            "published": True,
+            "genreId": genre_id,
 }
 
     @staticmethod
@@ -53,4 +54,11 @@ class DataGenerator:
     def random_page():
         return fake.random_int(min=1, max=2)
 
+    @staticmethod
+    def random_created_at():
+        created_at = ['asc', 'desc']
+        return fake.random_element(created_at)
 
+    @staticmethod
+    def random_big_int():
+        return fake.random_int(min=99999, max=999999)
