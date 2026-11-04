@@ -1,12 +1,12 @@
 
-def test_register_raw(manager_with_session, data_full):
-    manager_with_session.auth_api.registration(data_full)
+def test_register_raw(api_manager, random_user_payload):
+    api_manager.auth_api.registration(random_user_payload)
 
 
-def test_login_user(manager_with_session, registration_and_data_for_login):
-    manager_with_session.auth_api.login(registration_and_data_for_login)
+def test_login_user(api_manager, registered_user):
+    api_manager.auth_api.login(registered_user)
 
-def test_logout_user(manager_with_session,registration_and_data_for_login):
-    manager_with_session.auth_api.login(registration_and_data_for_login)
-    manager_with_session.auth_api.logout()
+def test_logout_user(api_manager, registered_user):
+    api_manager.auth_api.login(registered_user)
+    api_manager.auth_api.logout()
 

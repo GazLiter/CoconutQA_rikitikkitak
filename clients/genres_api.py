@@ -11,23 +11,23 @@ class GenresApi(DiyRequester):
             expected_status=200,
         )
 
-    def create_genres(self, name):
+    def create_genre(self, name):
         return self.send_request(
             method='POST',
             json={'name': name},
             expected_status= 201
         )
 
-    def delete_genres(self, id):
+    def delete_genre(self, id_genre):
         return self.send_request(
             'DELETE',
             expected_status=200,
-            endpoint=f'/{id}'
+            endpoint=f'/{id_genre}'
         )
 
-    def get_cinema_on_id(self,id):
+    def get_movie_by_id(self, id_genre):
         return self.send_request(
             method='GET',
             expected_status=200,
-            endpoint=f'/{id}'
+            endpoint=f'/{id_genre}'
         )

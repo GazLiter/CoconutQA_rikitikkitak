@@ -1,26 +1,32 @@
 import pytest
 import requests
-from requests import session
 
-from clients.api_meneger import ApiManager
+from clients.api_manager import ApiManager
+from config.admin_credentials import ADMIN_CREDENTIALS
 from utils.data_generator import DataGenerator
 
-@pytest.fixture()
-def manager_with_session():
-    session = requests.Session()
-    request = ApiManager(session)
 
-    yield request
+# ==========================================
+# 1. МЕНЕДЖЕРЫ
+# ==========================================
+
+
+@pytest.fixture()
+def api_manager():
+    session = requests.Session()
+    manager = ApiManager(session)
+
+    yield manager
 
     session.close()
 
 
 @pytest.fixture()
-def manager_super(admin_user):
+def admin_api_manager(admin_credentials):
     session = requests.Session()
     manager = ApiManager(session)
 
-    response = manager.auth_api.login(admin_user)
+    response = manager.auth_api.login(admin_credentials)
     token = response.json().get('accessToken')
     manager.session.headers.update({'Authorization': f'Bearer {token}'})
 
@@ -30,72 +36,99 @@ def manager_super(admin_user):
 
 
 @pytest.fixture()
-def admin_user():
-    return {'email': 'api1@gmail.com', 'password': 'asdqwe123Q'}
+def admin_credentials():
+    return ADMIN_CREDENTIALS
+
+
+# ==========================================
+# 2. ПОЛЬЗОВАТЕЛИ
+# ==========================================
+
 
 @pytest.fixture()
-def registration_and_data_for_login(manager_with_session):
+def registered_user(api_manager):
     data = DataGenerator.user_payload()
-    manager_with_session.auth_api.registration(data)
+    api_manager.auth_api.registration(data)
     return {'email': data['email'], 'password': data['password']}
 
 @pytest.fixture()
-def data_full():
+def random_user_payload():
     return DataGenerator.user_payload()
 
-@pytest.fixture()
-def name_cinema():
-    return DataGenerator.name_cinema()
 
-@pytest.fixture()
-def get_genre_id(manager_super, name_cinema):
-    response = manager_super.genres_api.create_genres(name_cinema)
-    id_cinema = response.json().get('id')
-    return id_cinema
-
+# ==========================================
+# 3. ЖАНРЫ
+# ==========================================
 
 
 @pytest.fixture()
-def get_genre_id_delete(manager_super, name_cinema):
-    response = manager_super.genres_api.create_genres(name_cinema)
-    id_cinema = response.json().get('id')
-    yield id_cinema
-
-    manager_super.genres_api.delete_genres(id_cinema)
+def genre_name():
+    return DataGenerator.name_movie()
 
 @pytest.fixture()
-def create_cinema_with_delete(manager_super, get_genre_id_delete):
-    data = DataGenerator.cinema_payload(get_genre_id_delete)
-    cinema = manager_super.movies_api.post_movies(data)
+def created_genre_id(admin_api_manager, genre_name, request):
+    body = admin_api_manager.genres_api.create_genre(genre_name).json()
+    genre_id = body.get('id')
 
-    yield cinema
+    yield genre_id
 
-    cinema_id = cinema.json().get('id')
-    manager_super.movies_api.delete_movies(cinema_id)
+    if not request.node.get_closest_marker("no_cleanup"):
+        admin_api_manager.genres_api.delete_genre(genre_id)
 
-@pytest.fixture()
-def cinema_payload(get_genre_id):
-    data = DataGenerator.cinema_payload(get_genre_id)
-    return data
 
-@pytest.fixture()
-def take_id_of_cinema_with_delete(manager_super,get_genre_id):
-    data = DataGenerator.cinema_payload(get_genre_id)
-    cinema = manager_super.movies_api.post_movies(data)
-    cinema_id = cinema.json().get('id')
 
-    yield cinema_id
 
-    manager_super.movies_api.delete_movies(cinema_id)
+# ==========================================
+# 4. ФИЛЬМЫ
+# ==========================================
+
 
 @pytest.fixture()
-def take_id_of_cinema(manager_super,get_genre_id):
-    data = DataGenerator.cinema_payload(get_genre_id)
-    cinema = manager_super.movies_api.post_movies(data)
-    cinema_id = cinema.json().get('id')
+def movie_payload(created_genre_id):
+    return DataGenerator.movie_payload(created_genre_id)
 
-    return cinema_id
 
+@pytest.fixture()
+def created_movie(admin_api_manager, created_genre_id, request):
+    created_ids = []
+
+    def create(**overrides):
+        payload = DataGenerator.movie_payload(created_genre_id)
+        payload.update(overrides)
+
+        body = admin_api_manager.movies_api.create_movie(payload).json()
+        created_ids.append(body['id'])
+        return body
+
+    yield create
+
+    if not request.node.get_closest_marker("no_cleanup"):
+        for movie_id in created_ids:
+            admin_api_manager.movies_api.delete_movie(movie_id)
+
+
+
+@pytest.fixture()
+def created_movie_id(created_movie):
+    return created_movie()['id']
+
+@pytest.fixture()
+def create_3_movies(admin_api_manager, created_genre_id, request):
+    movies = []
+    movie_ids = []
+
+    for _ in range(3):
+        payload = DataGenerator.movie_payload(created_genre_id)
+
+        body = admin_api_manager.movies_api.create_movie(payload).json()
+        movies.append(body)
+        movie_ids.append(body['id'])
+
+    yield movies
+
+    if not request.node.get_closest_marker("no_cleanup"):
+        for movie_id in movie_ids:
+            admin_api_manager.movies_api.delete_movie(movie_id)
 
 
 
